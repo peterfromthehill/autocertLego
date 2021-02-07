@@ -8,7 +8,7 @@ This package does not need an seperated listen port. Its use the user defined TL
 It works better with the Step CA
 
 # Example
-
+````
 whitelistedDomains := []string{
 fmt.Sprintf("%s.%s.svc.%s", config.Service, config.Namespace, config.ClusterDomain),
 fmt.Sprintf("%s.%s.svc", config.Service, config.Namespace),
@@ -27,5 +27,4 @@ Addr:      config.GetAddress(),
 TLSConfig: manager.TLSConfig(),
 Handler:   newRouter(config),
 }
-
-
+````
