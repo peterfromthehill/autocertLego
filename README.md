@@ -19,7 +19,7 @@ manager := &autocertLego.Manager{
 EMail:      config.EMail,
 Directory:  config.CAUrl,
 HostPolicy: autocertLego.HostWhitelist(whitelistedDomains...),
-DirCache:   autocert.DirCache("./secret-dir/"),
+Cache:   autocert.DirCache("./secret-dir/"),
 }
 
 srv := &http.Server{
