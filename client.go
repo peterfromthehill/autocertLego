@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/go-acme/lego/v4/certcrypto"
@@ -31,6 +32,7 @@ type ClientConfiguration struct {
 	TLSAddress     string
 	ProviderServer *ProviderServer
 	Cache          autocert.Cache
+	HTTPClient     *http.Client
 }
 
 func createClient(ctx context.Context, clientConfiguration *ClientConfiguration) (lego.Client, error) {
@@ -40,6 +42,9 @@ func createClient(ctx context.Context, clientConfiguration *ClientConfiguration)
 	config.CADirURL = clientConfiguration.DirectoryURL
 	//config.Certificate.KeyType = certcrypto.RSA4096
 	config.Certificate.KeyType = certcrypto.EC384
+	if clientConfiguration.HTTPClient != nil {
+		config.HTTPClient = clientConfiguration.HTTPClient
+	}
 
 	// Create a new client instance
 	client, err := lego.NewClient(config)

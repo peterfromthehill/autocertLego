@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"strings"
 	"time"
 
@@ -44,7 +45,8 @@ type Manager struct {
 	whitelistedDomains []string
 	provider           *ProviderServer
 	HostPolicy         HostPolicy
-	DirCache           autocert.Cache
+	Cache              autocert.Cache
+	HTTPClient         *http.Client
 }
 
 // TLSConfig creates a new TLS config suitable for net/http.Server servers,
@@ -95,7 +97,7 @@ func (m *Manager) GetCertificateFunc(clientHello *tls.ClientHelloInfo) (*tls.Cer
 			if klog.V(3).Enabled() {
 				klog.Infof("autocertLego: ask cache for %v", ck)
 			}
-			cert, err := cacheGet(ctx, m.DirCache, ck)
+			cert, err := cacheGet(ctx, m.Cache, ck)
 			if err == nil {
 				return cert, nil
 			}
@@ -127,12 +129,12 @@ func (m *Manager) GetCertificateFunc(clientHello *tls.ClientHelloInfo) (*tls.Cer
 	if err != nil {
 		return nil, err
 	}
-	cachePut(ctx, m.DirCache, ck, cert)
+	cachePut(ctx, m.Cache, ck, cert)
 	return cert, nil
 }
 
 func (m *Manager) cert(ctx context.Context, ck certKey) (*tls.Certificate, error) {
-	cert, err := cacheGet(ctx, m.DirCache, ck)
+	cert, err := cacheGet(ctx, m.Cache, ck)
 	if err != nil {
 		klog.Infof("autocertLego: Error cert/cacheGet: %w", err)
 		return nil, err
@@ -145,13 +147,13 @@ func (m *Manager) cert(ctx context.Context, ck certKey) (*tls.Certificate, error
 }
 
 func (m *Manager) createCert(ctx context.Context, domain string, port string) (*tls.Certificate, error) {
-	u, err := getUser(ctx, m.EMail, m.DirCache)
+	u, err := getUser(ctx, m.EMail, m.Cache)
 	if err != nil {
 		return nil, errors.New("autocertLego: failed to get ACME user: " + err.Error())
 	}
 
 	if m.provider == nil {
-		m.provider = NewProviderServer(port, m.DirCache)
+		m.provider = NewProviderServer(port, m.Cache)
 	}
 
 	// get ACME Client
@@ -160,7 +162,8 @@ func (m *Manager) createCert(ctx context.Context, domain string, port string) (*
 		DirectoryURL:   m.Directory,
 		TLSAddress:     net.JoinHostPort(domain, port),
 		ProviderServer: m.provider,
-		Cache:          m.DirCache,
+		Cache:          m.Cache,
+		HTTPClient:     m.HTTPClient,
 	}
 	client, err := createClient(ctx, clientConfiguration)
 	if err != nil {
