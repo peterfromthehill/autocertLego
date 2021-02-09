@@ -5,7 +5,7 @@ This package does not need an seperated listen port. Its use the user defined TL
 
 # Why?
 
-It works better with the Step CA
+It works better with the Step CA and a custom (self-signed) CA
 
 # Example
 ````
