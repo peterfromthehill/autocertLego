@@ -1,4 +1,4 @@
-module autocertLego
+module github.com/peterfromthehill/autocertLego
 
 go 1.15
 
